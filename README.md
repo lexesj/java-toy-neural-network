@@ -1,2 +1,2 @@
 # java-machine-learning
-Toy neural network in java
+Toy neural network in Java
