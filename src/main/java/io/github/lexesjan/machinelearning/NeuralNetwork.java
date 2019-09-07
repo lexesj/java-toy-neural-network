@@ -1,23 +1,28 @@
 package io.github.lexesjan.machinelearning;
 
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.ops.transforms.Transforms;
+import io.github.lexesjan.machinelearning.datawrapper.Data;
+import io.github.lexesjan.machinelearning.datawrapper.Image;
+import io.github.lexesjan.machinelearning.util.MNISTLoader;
+import io.github.lexesjan.machinelearning.util.Transforms;
+import org.ejml.dense.row.RandomMatrices_DDRM;
+import org.ejml.simple.SimpleMatrix;
 import java.io.IOException;
 import java.lang.StringBuilder;
+import java.util.Random;
 
 public class NeuralNetwork {
-    private INDArray[] weights;
-    private INDArray[] biases;
+    private SimpleMatrix[] weights;
+    private SimpleMatrix[] biases;
     private int[] sizes;
     private int numLayers;
 
     public NeuralNetwork(int[] sizes) {
-        this.weights = new INDArray[sizes.length - 1];
-        this.biases = new INDArray[sizes.length - 1];
+        this.weights = new SimpleMatrix[sizes.length - 1];
+        this.biases = new SimpleMatrix[sizes.length - 1];
+        Random rand = new Random();
         for (int k = 0, j = 1; k < sizes.length - 1; k++, j++) {
-            this.weights[k] = Nd4j.randn(sizes[j], sizes[k]);
-            this.biases[k] = Nd4j.randn(sizes[j], 1);
+            this.weights[k] = SimpleMatrix.wrap(RandomMatrices_DDRM.rectangleGaussian(sizes[j], sizes[k], 0, 1, rand));
+            this.biases[k] = SimpleMatrix.wrap(RandomMatrices_DDRM.rectangleGaussian(sizes[j], 1, 0, 1, rand));
         }
         this.sizes = sizes;
         this.numLayers = sizes.length;
@@ -49,62 +54,61 @@ public class NeuralNetwork {
     }
 
     private void updateMiniBatch(Data[] miniBatch, float learningRate) {
-        INDArray[] nablaW = new INDArray[this.weights.length];
-        INDArray[] nablaB = new INDArray[this.biases.length];
+        SimpleMatrix[] nablaW = new SimpleMatrix[this.weights.length];
+        SimpleMatrix[] nablaB = new SimpleMatrix[this.biases.length];
         for (int l = 0; l < this.numLayers - 1; l++) {
-            nablaW[l] = Nd4j.zeros(this.weights[l].shape());
-            nablaB[l] = Nd4j.zeros(this.biases[l].shape());
+            nablaW[l] = new SimpleMatrix(this.weights[l].numRows(), this.weights[l].numCols());
+            nablaB[l] = new SimpleMatrix(this.biases[l].numRows(), this.biases[l].numCols());
         }
         for (Data data : miniBatch) {
-            INDArray input = data.getInput();
-            INDArray answer = data.getExpectedOutput();
-            INDArray[][] delta = backprop(input, answer);
-            INDArray[] deltaNablaW = delta[0];
-            INDArray[] deltaNablaB = delta[1];
+            SimpleMatrix input = data.getInput();
+            SimpleMatrix answer = data.getExpectedOutput();
+            SimpleMatrix[][] delta = backprop(input, answer);
+            SimpleMatrix[] deltaNablaW = delta[0];
+            SimpleMatrix[] deltaNablaB = delta[1];
             for (int i = 0; i < this.numLayers - 1; i++) {
-                nablaW[i].addi(deltaNablaW[i]);
-                nablaB[i].addi(deltaNablaB[i]);
+                nablaW[i] = nablaW[i].plus(deltaNablaW[i]);
+                nablaB[i] = nablaB[i].plus(deltaNablaB[i]);
             }
         }
         for (int i = 0; i < this.numLayers - 1; i++) {
-            this.weights[i].subi(nablaW[i].divi(miniBatch.length).muli(learningRate));
-            this.biases[i].subi(nablaB[i].divi(miniBatch.length).muli(learningRate));
+            this.weights[i] = this.weights[i].minus(nablaW[i].divide(miniBatch.length).scale(learningRate));
+            this.biases[i] = this.biases[i].minus(nablaB[i].divide(miniBatch.length).scale(learningRate));
         }
     }
 
-    private INDArray[][] backprop(INDArray input, INDArray answer) {
-        INDArray[] nablaW = new INDArray[this.weights.length];
-        INDArray[] nablaB = new INDArray[this.biases.length];
-        INDArray[] zs = new INDArray[this.numLayers - 1];
-        INDArray[] activations = new INDArray[this.numLayers];
-        INDArray activation = input;
+    private SimpleMatrix[][] backprop(SimpleMatrix input, SimpleMatrix answer) {
+        SimpleMatrix[] nablaW = new SimpleMatrix[this.weights.length];
+        SimpleMatrix[] nablaB = new SimpleMatrix[this.biases.length];
+        SimpleMatrix[] zs = new SimpleMatrix[this.numLayers - 1];
+        SimpleMatrix[] activations = new SimpleMatrix[this.numLayers];
+        SimpleMatrix activation = input;
         activations[0] = activation;
         for (int l = 0; l < this.numLayers - 1; l++) {
-            INDArray z = this.weights[l].mmul(activation).add(this.biases[l]);
+            SimpleMatrix z = this.weights[l].mult(activation).plus(this.biases[l]);
             activation = Transforms.sigmoid(z);
             zs[l] = z;
             activations[l + 1] = activation;
         }
-        INDArray delta = costDerivative(activations[activations.length - 1], answer).mul(Transforms.sigmoidDerivative(activations[activations.length - 1]));
-        nablaW[nablaW.length - 1] = delta.mmul(activations[activations.length - 2].transpose());
+        SimpleMatrix delta = costDerivative(activations[activations.length - 1], answer).elementMult(Transforms.sigmoidPrime(activations[activations.length - 1]));
+        nablaW[nablaW.length - 1] = delta.mult(activations[activations.length - 2].transpose());
         nablaB[nablaB.length - 1] = delta;
         for (int l = 2; l < this.numLayers; l++) {
-            INDArray sigmoidPrime = Transforms.sigmoidDerivative(zs[zs.length - l]);
-            delta = this.weights[this.weights.length - l + 1].transpose().mmul(delta).mul(sigmoidPrime);
-            nablaW[nablaW.length - l] = delta.mmul(activations[activations.length - l - 1].transpose());
+            SimpleMatrix sigmoidPrime = Transforms.sigmoidPrime(zs[zs.length - l]);
+            delta = this.weights[this.weights.length - l + 1].transpose().mult(delta).elementMult(sigmoidPrime);
+            nablaW[nablaW.length - l] = delta.mult(activations[activations.length - l - 1].transpose());
             nablaB[nablaB.length - l] = delta;
         }
-        return new INDArray[][] {nablaW, nablaB};
+        return new SimpleMatrix[][] {nablaW, nablaB};
     }
 
     private float getAccuracy(Data[] testData) {
         int correct = 0;
         for (Data data : testData) {
-            long[] shape = data.getExpectedOutput().shape();
             boolean isCorrect = true;
-            for (int i = 0; i < shape[0] && isCorrect; i++) {
-                float correctAnswer = data.getExpectedOutput().getFloat(i, 1);
-                float answer = Math.round(feedForward(data.getInput()).getFloat(i, 1));
+            for (int i = 0; i < data.getExpectedOutput().numRows() && isCorrect; i++) {
+                double correctAnswer = data.getExpectedOutput().get(i, 0);
+                double answer = Math.round(feedForward(data.getInput()).get(i, 0));
                 if (answer != correctAnswer) {
                     isCorrect = false;
                 }
@@ -116,24 +120,16 @@ public class NeuralNetwork {
         return (float) correct / testData.length;
     }
 
-    private INDArray costDerivative(INDArray lastActivation, INDArray answer) {
-        return lastActivation.sub(answer);
+    private SimpleMatrix costDerivative(SimpleMatrix lastActivation, SimpleMatrix answer) {
+        return lastActivation.minus(answer);
     }
 
-    private INDArray feedForward(INDArray input) {
-        INDArray answer = input;
+    private SimpleMatrix feedForward(SimpleMatrix input) {
+        SimpleMatrix answer = input;
         for (int l = 0; l < this.numLayers - 1; l++) {
-            answer = Transforms.sigmoid(this.weights[l].mmul(answer).add(this.biases[l]));
+            answer = Transforms.sigmoid(this.weights[l].mult(answer).plus(this.biases[l]));
         }
         return answer;
-    }
-
-    private static float sigmoid(float z) {
-        return 1 / (1 + (float) Math.exp(-z));
-    }
-
-    private static float sigmoidPrime(float z) {
-        return sigmoid(z) * (1 - sigmoid(z));
     }
 
     private static Data[] shuffle(Data[] unshuffled) {
@@ -164,13 +160,13 @@ public class NeuralNetwork {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Weights: \n");
 
-        for (INDArray weight : weights) {
+        for (SimpleMatrix weight : weights) {
             stringBuilder.append(weight);
             stringBuilder.append("\n");
         }
 
         stringBuilder.append("\nBiases: \n");
-        for (INDArray bias : biases) {
+        for (SimpleMatrix bias : biases) {
             stringBuilder.append(bias);
             stringBuilder.append("\n");
         }
@@ -178,29 +174,28 @@ public class NeuralNetwork {
     }
 
     public static void main(String[] args) {
-        Data[] trainingData = {
-                new Data(Nd4j.create(new float[] {0, 0}, new int[] {2, 1}), Nd4j.create(new float[] {0}, new int[] {1, 1})),
-                new Data(Nd4j.create(new float[] {0, 1}, new int[] {2, 1}), Nd4j.create(new float[] {1}, new int[] {1, 1})),
-                new Data(Nd4j.create(new float[] {1, 0}, new int[] {2, 1}), Nd4j.create(new float[] {1}, new int[] {1, 1})),
-                new Data(Nd4j.create(new float[] {1, 1}, new int[] {2, 1}), Nd4j.create(new float[] {0}, new int[] {1, 1}))
-        };
-        NeuralNetwork nn = new NeuralNetwork(new int[] {2, 10, 1});
-        nn.train(10000, 3, 1, trainingData, trainingData);
-        System.out.println(nn.feedForward(Nd4j.create(new float[] {0, 0}, new int[] {2, 1})));
-        System.out.println(nn.feedForward(Nd4j.create(new float[] {0, 1}, new int[] {2, 1})));
-        System.out.println(nn.feedForward(Nd4j.create(new float[] {1, 0}, new int[] {2, 1})));
-        System.out.println(nn.feedForward(Nd4j.create(new float[] {1, 1}, new int[] {2, 1})));
-//        try {
-//            long start = System.currentTimeMillis();
-//            Data[][] MNISTData = MNISTLoader.loadDataWrapper("mnist dataset");
-//            System.out.println("Finished loading data in " + (System.currentTimeMillis() - start) + " ms.");
-//            Data[] trainingData = MNISTData[0];
-//            Data[] testData = MNISTData[1];
-//            long[] shape = ((Image) trainingData[0]).shape();
-//            NeuralNetwork nn = new NeuralNetwork(new int[] {(int) (shape[0] * shape[1]), 16, 10});
-//            nn.train(30, 3, 128, trainingData, testData);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+//        Data[] trainingData = {
+//                new Data(new SimpleMatrix(new float[][] {{0}, {0}}), new SimpleMatrix(new float[][] {{0}})),
+//                new Data(new SimpleMatrix(new float[][] {{0}, {1}}), new SimpleMatrix(new float[][] {{1}})),
+//                new Data(new SimpleMatrix(new float[][] {{1}, {0}}), new SimpleMatrix(new float[][] {{1}})),
+//                new Data(new SimpleMatrix(new float[][] {{1}, {1}}), new SimpleMatrix(new float[][] {{0}})),
+//        };
+//        NeuralNetwork nn = new NeuralNetwork(new int[] {2, 10, 1});
+//        nn.train(10000, 3, 1, trainingData, trainingData);
+//        System.out.println(nn.feedForward(new SimpleMatrix(new float[][] {{0}, {0}})));
+//        System.out.println(nn.feedForward(new SimpleMatrix(new float[][] {{0}, {1}})));
+//        System.out.println(nn.feedForward(new SimpleMatrix(new float[][] {{1}, {0}})));
+//        System.out.println(nn.feedForward(new SimpleMatrix(new float[][] {{1}, {1}})));
+        try {
+            long start = System.currentTimeMillis();
+            Data[][] MNISTData = MNISTLoader.loadDataWrapper("mnist dataset");
+            System.out.println("Finished loading data in " + (System.currentTimeMillis() - start) + " ms.");
+            Data[] trainingData = MNISTData[0];
+            Data[] testData = MNISTData[1];
+            NeuralNetwork nn = new NeuralNetwork(new int[] {((Image) trainingData[0]).numRows(), 30, 10});
+            nn.train(30, 3, 10, trainingData, testData);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
