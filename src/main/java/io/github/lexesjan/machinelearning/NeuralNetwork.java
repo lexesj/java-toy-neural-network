@@ -1,12 +1,9 @@
 package io.github.lexesjan.machinelearning;
 
 import io.github.lexesjan.machinelearning.datawrapper.Data;
-import io.github.lexesjan.machinelearning.datawrapper.Image;
-import io.github.lexesjan.machinelearning.util.MNISTLoader;
 import io.github.lexesjan.machinelearning.util.Transforms;
 import org.ejml.dense.row.RandomMatrices_DDRM;
 import org.ejml.simple.SimpleMatrix;
-import java.io.IOException;
 import java.lang.StringBuilder;
 import java.util.Random;
 
@@ -102,22 +99,25 @@ public class NeuralNetwork {
         return new SimpleMatrix[][] {nablaW, nablaB};
     }
 
-    private float getAccuracy(Data[] testData) {
-        int correct = 0;
-        for (Data data : testData) {
-            boolean isCorrect = true;
-            for (int i = 0; i < data.getExpectedOutput().numRows() && isCorrect; i++) {
-                double correctAnswer = data.getExpectedOutput().get(i, 0);
-                double answer = Math.round(feedForward(data.getInput()).get(i, 0));
-                if (answer != correctAnswer) {
-                    isCorrect = false;
+    public float getAccuracy(Data[] testData) {
+        if (testData != null) {
+            int correct = 0;
+            for (Data data : testData) {
+                boolean isCorrect = true;
+                for (int i = 0; i < data.getExpectedOutput().numRows() && isCorrect; i++) {
+                    double correctAnswer = data.getExpectedOutput().get(i, 0);
+                    double answer = Math.round(feedForward(data.getInput()).get(i, 0));
+                    if (answer != correctAnswer) {
+                        isCorrect = false;
+                    }
+                }
+                if (isCorrect) {
+                    correct++;
                 }
             }
-            if (isCorrect) {
-                correct++;
-            }
+            return (float) correct / testData.length;
         }
-        return (float) correct / testData.length;
+        return -1;
     }
 
     private SimpleMatrix costDerivative(SimpleMatrix lastActivation, SimpleMatrix answer) {
