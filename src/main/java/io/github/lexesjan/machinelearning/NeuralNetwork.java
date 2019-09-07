@@ -124,7 +124,7 @@ public class NeuralNetwork {
         return lastActivation.minus(answer);
     }
 
-    private SimpleMatrix feedForward(SimpleMatrix input) {
+    public SimpleMatrix feedForward(SimpleMatrix input) {
         SimpleMatrix answer = input;
         for (int l = 0; l < this.numLayers - 1; l++) {
             answer = Transforms.sigmoid(this.weights[l].mult(answer).plus(this.biases[l]));
@@ -171,31 +171,5 @@ public class NeuralNetwork {
             stringBuilder.append("\n");
         }
         return stringBuilder.toString();
-    }
-
-    public static void main(String[] args) {
-//        Data[] trainingData = {
-//                new Data(new SimpleMatrix(new float[][] {{0}, {0}}), new SimpleMatrix(new float[][] {{0}})),
-//                new Data(new SimpleMatrix(new float[][] {{0}, {1}}), new SimpleMatrix(new float[][] {{1}})),
-//                new Data(new SimpleMatrix(new float[][] {{1}, {0}}), new SimpleMatrix(new float[][] {{1}})),
-//                new Data(new SimpleMatrix(new float[][] {{1}, {1}}), new SimpleMatrix(new float[][] {{0}})),
-//        };
-//        NeuralNetwork nn = new NeuralNetwork(new int[] {2, 10, 1});
-//        nn.train(10000, 3, 1, trainingData, trainingData);
-//        System.out.println(nn.feedForward(new SimpleMatrix(new float[][] {{0}, {0}})));
-//        System.out.println(nn.feedForward(new SimpleMatrix(new float[][] {{0}, {1}})));
-//        System.out.println(nn.feedForward(new SimpleMatrix(new float[][] {{1}, {0}})));
-//        System.out.println(nn.feedForward(new SimpleMatrix(new float[][] {{1}, {1}})));
-        try {
-            long start = System.currentTimeMillis();
-            Data[][] MNISTData = MNISTLoader.loadDataWrapper("mnist dataset");
-            System.out.println("Finished loading data in " + (System.currentTimeMillis() - start) + " ms.");
-            Data[] trainingData = MNISTData[0];
-            Data[] testData = MNISTData[1];
-            NeuralNetwork nn = new NeuralNetwork(new int[] {((Image) trainingData[0]).numRows(), 30, 10});
-            nn.train(30, 3, 10, trainingData, testData);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
