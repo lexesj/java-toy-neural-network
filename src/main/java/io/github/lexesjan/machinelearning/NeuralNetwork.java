@@ -1,9 +1,16 @@
 package io.github.lexesjan.machinelearning;
 
 import io.github.lexesjan.machinelearning.datawrapper.Data;
+import io.github.lexesjan.machinelearning.datawrapper.Image;
+import io.github.lexesjan.machinelearning.util.MNISTLoader;
 import io.github.lexesjan.machinelearning.util.Transforms;
 import org.ejml.dense.row.RandomMatrices_DDRM;
 import org.ejml.simple.SimpleMatrix;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.lang.StringBuilder;
 import java.util.Random;
 
@@ -124,6 +131,22 @@ public class NeuralNetwork {
         return lastActivation.minus(answer);
     }
 
+    public double[][] feedForward(double[][] input) {
+        SimpleMatrix inputMatrix = new SimpleMatrix(input);
+        inputMatrix.reshape(this.sizes[0], 1);
+        return matrixToDoubleArray(feedForward(inputMatrix));
+    }
+
+    private static double[][] matrixToDoubleArray(SimpleMatrix input) {
+        double[][] converted = new double[input.numRows()][input.numCols()];
+        for (int i = 0; i < converted.length; i++) {
+            for (int j = 0; j < converted[i].length; j++) {
+                converted[i][j] = input.get(i, j);
+            }
+        }
+        return converted;
+    }
+
     public SimpleMatrix feedForward(SimpleMatrix input) {
         SimpleMatrix answer = input;
         for (int l = 0; l < this.numLayers - 1; l++) {
@@ -171,5 +194,41 @@ public class NeuralNetwork {
             stringBuilder.append("\n");
         }
         return stringBuilder.toString();
+    }
+
+    public static void main(String[] args) throws IOException {
+        Image[][] a = MNISTLoader.loadDataWrapper("mnist dataset");
+        NeuralNetwork nn = new NeuralNetwork(new int[]{784, 30, 10});
+        nn.train(1, 3, 10, a[0], a[1]);
+        System.out.println(nn);
+        a[0][94].save("test.png", "png");
+        Image test = new Image(fileToMatrix("test.png"), new SimpleMatrix(new double[][]{{1}}));
+        test.normalise();
+        test.flatten();
+        test = new Image(test.getImageData(), nn.feedForward(test.getInput()));
+        System.out.println(test.getLabel());
+    }
+
+    public static SimpleMatrix fileToMatrix(String fileName) throws IOException {
+        return fileToMatrix(new File(fileName));
+    }
+
+    public static SimpleMatrix fileToMatrix(File file) throws IOException {
+        return new SimpleMatrix(fileToDoubleArray(file));
+    }
+
+    public static double[][] fileToDoubleArray(File file) throws IOException {
+        BufferedImage image = ImageIO.read(file);
+        double[][] imageArray = new double[image.getWidth()][image.getHeight()];
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int pixel = image.getRGB(x, y);
+                int red = (0xFF << 16) & pixel;
+                int green = (0xFF << 8) & pixel;
+                int blue = 0xFF & pixel;
+                imageArray[y][x] = (red + green + blue) / 3.0;
+            }
+        }
+        return imageArray;
     }
 }
