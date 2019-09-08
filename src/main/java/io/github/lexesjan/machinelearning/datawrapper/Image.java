@@ -3,14 +3,18 @@ package io.github.lexesjan.machinelearning.datawrapper;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import javax.imageio.ImageIO;
-
-import io.github.lexesjan.machinelearning.util.MNISTLoader;
 import org.ejml.simple.SimpleMatrix;
 
 public class Image extends Data {
     private boolean isFlat;
     private int[] originalShape;
+
+    public Image(double[][] imageData, double[][] label) {
+        super(new SimpleMatrix(imageData), new SimpleMatrix(label));
+    }
+
     public Image(SimpleMatrix[] data) {
         this(data[0], data[1]);
     }
@@ -26,12 +30,16 @@ public class Image extends Data {
     }
 
     public int getLabel() {
+        double max = -1;
+        int maxIndex = -1;
         for (int i = 0; i < super.expectedOutput.numRows(); i++) {
-            if (this.expectedOutput.get(i, 0) == 1) {
-                return i;
+            double currentOutput = super.expectedOutput.get(i, 0);
+            if (Math.max(max, currentOutput) != max) {
+                maxIndex = i;
             }
+            max = Math.max(currentOutput, max);
         }
-        return -1;
+        return maxIndex;
     }
 
     public void flatten() {
@@ -78,10 +86,5 @@ public class Image extends Data {
 
     public int numCols() {
         return super.input.numCols();
-    }
-
-    public static void main(String[] args) throws IOException {
-        Image[][] a = MNISTLoader.loadDataWrapper("mnist dataset");
-        a[0][59998].save(a[0][59998].getLabel() + ".png", "png");
     }
 }
