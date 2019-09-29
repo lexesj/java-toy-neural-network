@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.lexesjan.machinelearning</groupId>
-    <artifactId>neural-network</artifactId>
+    <artifactId>toy-neural-network</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
