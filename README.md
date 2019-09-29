@@ -30,7 +30,7 @@ I built this library as I was facinated in neural networks and wondered how they
       - ```double[][] feedForward(double[][] input)``` - Returns the output of the neural network as a 2d double array which is a vector
       - ```void train(int epochs, float learningRate, int miniBatchSize, Data[] trainingData)``` - Trains the neural network
       - ```void train(int epochs, float learningRate, int miniBatchSize, Data[] trainingData, Data[] testData)``` - Trains the neural network and prints out the accuracy after each epoch
-      - ```SimpleMatrix fileToMatrix(String fileName)``` - Takes in an image name file and converts it to a SimpleMatrix object
+      - ```SimpleMatrix fileToMatrix(String fileName)``` - Takes in an image name and converts it to a SimpleMatrix object
       - ```SimpleMatrix fileToMatrix(File file)``` - Takes in an image file and converts it to a SimpleMatrix object
       - ```float getAccuracy(Data[] testData)``` - Calculates the accuracy of the neural network with the provided test data
   
