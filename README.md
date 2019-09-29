@@ -21,7 +21,7 @@ I built this library as I was facinated in neural networks and wondered how they
     4. Run the MNIST example code
   - XOR problem
     1. Add the library to the classpath
-    2. Run the MNIST example code
+    2. Run the XOR example code
     
   ### Documentation
   - ```NeuralNetwork``` - The neural network class
