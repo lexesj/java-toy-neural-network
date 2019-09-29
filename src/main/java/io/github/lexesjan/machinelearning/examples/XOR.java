@@ -14,9 +14,13 @@ public class XOR {
         };
         NeuralNetwork nn = new NeuralNetwork(new int[] {2, 10, 1});
         nn.train(10000, 3, 1, trainingData, trainingData);
-        System.out.println(nn.feedForward(new SimpleMatrix(new float[][] {{0}, {0}})));
-        System.out.println(nn.feedForward(new SimpleMatrix(new float[][] {{0}, {1}})));
-        System.out.println(nn.feedForward(new SimpleMatrix(new float[][] {{1}, {0}})));
-        System.out.println(nn.feedForward(new SimpleMatrix(new float[][] {{1}, {1}})));
+        System.out.println("Input: {{0}, {0}}\nOutput: ");
+        nn.feedForward(new SimpleMatrix(new float[][] {{0}, {0}})).print("%f\n");
+        System.out.println("Input: {{0}, {1}}\nOutput: ");
+        nn.feedForward(new SimpleMatrix(new float[][] {{0}, {1}})).print("%f\n");
+        System.out.println("Input: {{1}, {0}}\nOutput: ");
+        nn.feedForward(new SimpleMatrix(new float[][] {{1}, {0}})).print("%f\n");
+        System.out.println("Input: {{1}, {1}}\nOutput: ");
+        nn.feedForward(new SimpleMatrix(new float[][] {{1}, {1}})).print("%f\n");
     }
 }
