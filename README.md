@@ -15,7 +15,7 @@ I built this library as I was facinated in neural networks and wondered how they
   ```
   ### Running Examples
   - MNIST dataset
-    1. Download all files of the [MNIST dataset](yann.lecun.com/exdb/mnist/)
+    1. Download all files of the [MNIST dataset](http://yann.lecun.com/exdb/mnist/)
     2. Add the library to the classpath
     3. Change the folder location parameter in the loadDataWrapper() method in the example code
     4. Run the MNIST example code
