@@ -26,7 +26,7 @@ I built this library as I was facinated in neural networks and wondered how they
   ### Documentation
   - ```NeuralNetwork``` - The neural network class
       - ```NeuralNetwork(int[] sizes)``` - Creates a new neural network with the specified layer sizes (each element in the array corresponds to a layer size)
-      - ```SimpleMatrix feedForward(SimpleMatrix input)``` - Returns the output of the neural network as a SimpleMatrix which is a vecto.
+      - ```SimpleMatrix feedForward(SimpleMatrix input)``` - Returns the output of the neural network as a SimpleMatrix which is a vector
       - ```double[][] feedForward(double[][] input)``` - Returns the output of the neural network as a 2d double array which is a vector
       - ```void train(int epochs, float learningRate, int miniBatchSize, Data[] trainingData)``` - Trains the neural network
       - ```void train(int epochs, float learningRate, int miniBatchSize, Data[] trainingData, Data[] testData)``` - Trains the neural network and prints out the accuracy after each epoch
