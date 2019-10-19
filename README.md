@@ -37,3 +37,9 @@ I built this library as I was facinated in neural networks and wondered how they
   ## Library Used
   [Efficient Java Matrix Library (EJML)](https://github.com/lessthanoptimal/ejml)
   
+  ## Resources Used
+  - [The Coding Train neural network series](https://www.youtube.com/watch?v=XJ7HLz9VYz0&list=PLRqwX-V7Uu6aCibgK1PTWWu9by6XFdCfh&index=1)
+  - [3Blue1Brown neural network series](https://www.youtube.com/watch?v=aircAruvnKk&list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi&index=2)
+  - [Neural networks and deep learning](http://neuralnetworksanddeeplearning.com/)
+  - [Back Propagation Derivation for Feed Forward Artificial Neural Networks](https://youtu.be/gl3lfL-g5mA)
+  - [ giant_neural_network neural network series](https://www.youtube.com/watch?v=ZzWaow1Rvho&list=PLxt59R_fWVzT9bDxA76AHm3ig0Gg9S3So)
